@@ -83,18 +83,14 @@ contract DeployInstance is Script {
   // default values
   bool internal _verbose = true;
   uint256 public targetHat;
-  address public coLinks = 0x7154cA7E4C756E06151aefA2D765404950FA0EE1;
   uint256 public threshold;
 
   /// @dev Override default values, if desired
-  function prepare(bool verbose, uint256 _targetHat, address _implementation, address _coLinks, uint256 _threshold)
-    public
-  {
+  function prepare(bool verbose, uint256 _targetHat, address _implementation, uint256 _threshold) public {
     _verbose = verbose;
     targetHat = _targetHat;
     implementation = _implementation;
     threshold = _threshold;
-    coLinks = _coLinks;
   }
 
   /// @dev Set up the deployer via their private key from the environment
@@ -116,7 +112,7 @@ contract DeployInstance is Script {
     instance = FACTORY.createHatsModule(
       implementation,
       targetHat, // hatId
-      abi.encodePacked(coLinks, threshold), // otherImmutableArgs
+      abi.encodePacked(threshold), // otherImmutableArgs
       abi.encode() // initArgs
     );
 

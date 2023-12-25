@@ -29,17 +29,14 @@ contract CoLinksEligibility is HatsEligibilityModule {
    * 0       | IMPLEMENTATION    | address     | 20      | HatsModule      |
    * 20      | HATS              | address     | 20      | HatsModule      |
    * 40      | hatId             | uint256     | 32      | HatsModule      |
-   * 72      | COLINKS           | CoLinksLike | 20      | this            |
-   * 92      | THRESHOLD         | uint256     | 32      | this            |
+   * 72      | THRESHOLD         | uint256     | 32      | this            |
    * ----------------------------------------------------------------------+
    */
 
-  function COLINKS() public pure returns (CoLinksLike) {
-    return CoLinksLike(_getArgAddress(72));
-  }
+  CoLinksLike public constant COLINKS = CoLinksLike(0x7154cA7E4C756E06151aefA2D765404950FA0EE1);
 
   function THRESHOLD() public pure returns (uint256) {
-    return _getArgUint256(92);
+    return _getArgUint256(72);
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -74,6 +71,6 @@ contract CoLinksEligibility is HatsEligibilityModule {
     // this module only checks eligibility, not standing
     standing = true;
 
-    eligible = COLINKS().linkSupply(_wearer) >= THRESHOLD();
+    eligible = COLINKS.linkSupply(_wearer) >= THRESHOLD();
   }
 }

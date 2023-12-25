@@ -27,7 +27,7 @@ contract ModuleTest is DeployImplementation, Test {
   string public MODULE_VERSION;
 
   function _deployInstance(uint256 _threshold) internal returns (CoLinksEligibility) {
-    deployInstance.prepare(false, targetHat, address(implementation), address(COLINKS), _threshold);
+    deployInstance.prepare(false, targetHat, address(implementation), _threshold);
     return CoLinksEligibility(deployInstance.run());
   }
 
