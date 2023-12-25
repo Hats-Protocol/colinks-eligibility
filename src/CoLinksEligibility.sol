@@ -1,22 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-// import { console2 } from "forge-std/Test.sol"; // remove before deploy
-import { HatsModule } from "hats-module/HatsModule.sol";
+// import { console2 } from "forge-std/Test.sol"; // comment out before deploy
+import { HatsEligibilityModule } from "hats-module/src/HatsEligibilityModule.sol";
+import { HatsModule } from "lib/hats-module/src/HatsModule.sol";
+import { CoLinksLike } from "./lib/CoLinksLike.sol";
 
-contract Module is HatsModule {
-  /*//////////////////////////////////////////////////////////////
-                            CUSTOM ERRORS
-  //////////////////////////////////////////////////////////////*/
-
-  /*//////////////////////////////////////////////////////////////
-                              EVENTS
-  //////////////////////////////////////////////////////////////*/
-
-  /*//////////////////////////////////////////////////////////////
-                            DATA MODELS
-  //////////////////////////////////////////////////////////////*/
-
+contract CoLinksEligibility is HatsEligibilityModule {
   /*//////////////////////////////////////////////////////////////
                             CONSTANTS 
   //////////////////////////////////////////////////////////////*/
@@ -34,18 +24,23 @@ contract Module is HatsModule {
    * ----------------------------------------------------------------------+
    * CLONE IMMUTABLE "STORAGE"                                             |
    * ----------------------------------------------------------------------|
-   * Offset  | Constant          | Type    | Length  | Source              |
+   * Offset  | Constant          | Type        | Length  | Source          |
    * ----------------------------------------------------------------------|
-   * 0       | IMPLEMENTATION    | address | 20      | HatsModule          |
-   * 20      | HATS              | address | 20      | HatsModule          |
-   * 40      | hatId             | uint256 | 32      | HatsModule          |
-   * 72+     | {other constants} | address | -       | {this}              |
+   * 0       | IMPLEMENTATION    | address     | 20      | HatsModule      |
+   * 20      | HATS              | address     | 20      | HatsModule      |
+   * 40      | hatId             | uint256     | 32      | HatsModule      |
+   * 72      | COLINKS           | CoLinksLike | 20      | this            |
+   * 92      | THRESHOLD         | uint256     | 32      | this            |
    * ----------------------------------------------------------------------+
    */
 
-  /*//////////////////////////////////////////////////////////////
-                            MUTABLE STATE
-  //////////////////////////////////////////////////////////////*/
+  function COLINKS() public pure returns (CoLinksLike) {
+    return CoLinksLike(_getArgAddress(72));
+  }
+
+  function THRESHOLD() public pure returns (uint256) {
+    return _getArgUint256(92);
+  }
 
   /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
@@ -56,7 +51,7 @@ contract Module is HatsModule {
   constructor(string memory _version) HatsModule(_version) { }
 
   /*//////////////////////////////////////////////////////////////
-                            INITIALIZOR
+                            INITIALIZER
   //////////////////////////////////////////////////////////////*/
 
   /// @inheritdoc HatsModule
@@ -65,18 +60,20 @@ contract Module is HatsModule {
   }
 
   /*//////////////////////////////////////////////////////////////
-                        PUBLIC FUNCTIONS
+                    HATS ELIGIBILITY FUNCTION
   //////////////////////////////////////////////////////////////*/
 
-  /*//////////////////////////////////////////////////////////////
-                          VIEW FUNCTIONS
-  //////////////////////////////////////////////////////////////*/
+  /// @inheritdoc HatsEligibilityModule
+  function getWearerStatus(address _wearer, uint256 /* _hatId */ )
+    public
+    view
+    virtual
+    override
+    returns (bool eligible, bool standing)
+  {
+    // this module only checks eligibility, not standing
+    standing = true;
 
-  /*//////////////////////////////////////////////////////////////
-                        INTERNAL FUNCTIONS
-  //////////////////////////////////////////////////////////////*/
-
-  /*//////////////////////////////////////////////////////////////
-                            MODIFERS
-  //////////////////////////////////////////////////////////////*/
+    eligible = COLINKS().linkSupply(_wearer) >= THRESHOLD();
+  }
 }

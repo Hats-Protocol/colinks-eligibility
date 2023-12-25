@@ -2,15 +2,16 @@
 pragma solidity ^0.8.19;
 
 import { Script, console2 } from "forge-std/Script.sol";
-import { Module } from "../src/Module.sol";
+import { CoLinksEligibility } from "../src/CoLinksEligibility.sol";
+import { HatsModuleFactory } from "lib/hats-module/src/HatsModuleFactory.sol";
 
-contract Deploy is Script {
-  Module public implementation;
-  bytes32 public SALT = bytes32(abi.encode("change this to the value of your choice"));
+contract DeployImplementation is Script {
+  CoLinksEligibility public implementation;
+  bytes32 public SALT = bytes32(abi.encode(0x4a75));
 
   // default values
   bool internal _verbose = true;
-  string internal _version = "0.0.1"; // increment this with each new deployment
+  string internal _version = "0.1.0"; // increment this with each new deployment
 
   /// @dev Override default values, if desired
   function prepare(bool verbose, string memory version) public {
@@ -26,7 +27,7 @@ contract Deploy is Script {
 
   function _log(string memory prefix) internal view {
     if (_verbose) {
-      console2.log(string.concat(prefix, "Module:"), address(implementation));
+      console2.log(string.concat(prefix, "Implementation:"), address(implementation));
     }
   }
 
@@ -42,29 +43,11 @@ contract Deploy is Script {
      *       never differs regardless of where its being compiled
      *    2. The provided salt, `SALT`
      */
-    implementation = new Module{ salt: SALT}(_version /* insert constructor args here */);
+    implementation = new CoLinksEligibility{ salt: SALT }(_version /* insert constructor args here */ );
 
     vm.stopBroadcast();
 
     _log("");
-  }
-}
-
-/// @dev Deploy pre-compiled ir-optimized bytecode to a non-deterministic address
-contract DeployPrecompiled is Deploy {
-  /// @dev Update SALT and default values in Deploy contract
-
-  function run() public override {
-    vm.startBroadcast(deployer());
-
-    bytes memory args = abi.encode( /* insert constructor args here */ );
-
-    /// @dev Load and deploy pre-compiled ir-optimized bytecode.
-    implementation = Module(deployCode("optimized-out/Module.sol/Module.json", args));
-
-    vm.stopBroadcast();
-
-    _log("Precompiled ");
   }
 }
 
@@ -91,3 +74,56 @@ forge verify-contract --chain-id 1 --num-of-optimizations 1000000 --watch --cons
   See this github issue for more: https://github.com/foundry-rs/foundry/issues/3507#issuecomment-1465382107
 
 */
+
+contract DeployInstance is Script {
+  HatsModuleFactory public constant FACTORY = HatsModuleFactory(0xfE661c01891172046feE16D3a57c3Cf456729efA);
+  address public implementation;
+  address public instance;
+
+  // default values
+  bool internal _verbose = true;
+  uint256 public targetHat;
+  address public coLinks = 0x7154cA7E4C756E06151aefA2D765404950FA0EE1;
+  uint256 public threshold;
+
+  /// @dev Override default values, if desired
+  function prepare(bool verbose, uint256 _targetHat, address _implementation, address _coLinks, uint256 _threshold)
+    public
+  {
+    _verbose = verbose;
+    targetHat = _targetHat;
+    implementation = _implementation;
+    threshold = _threshold;
+    coLinks = _coLinks;
+  }
+
+  /// @dev Set up the deployer via their private key from the environment
+  function deployer() public returns (address) {
+    uint256 privKey = vm.envUint("PRIVATE_KEY");
+    return vm.rememberKey(privKey);
+  }
+
+  function _log(string memory prefix) internal view {
+    if (_verbose) {
+      console2.log(string.concat(prefix, "Deployed instance:"), instance);
+    }
+  }
+
+  /// @dev Deploy the contract to a deterministic address via forge's create2 deployer factory.
+  function run() public virtual returns (address) {
+    vm.startBroadcast(deployer());
+
+    instance = FACTORY.createHatsModule(
+      implementation,
+      targetHat, // hatId
+      abi.encodePacked(coLinks, threshold), // otherImmutableArgs
+      abi.encode() // initArgs
+    );
+
+    vm.stopBroadcast();
+
+    _log("");
+
+    return instance;
+  }
+}
