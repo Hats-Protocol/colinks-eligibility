@@ -32,7 +32,6 @@ contract CoLinksEligibility is HatsEligibilityModule {
    * 72      | THRESHOLD         | uint256     | 32      | this            |
    * ----------------------------------------------------------------------+
    */
-
   CoLinksLike public constant COLINKS = CoLinksLike(0x7154cA7E4C756E06151aefA2D765404950FA0EE1);
 
   function THRESHOLD() public pure returns (uint256) {

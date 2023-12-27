@@ -1,4 +1,4 @@
-# CoLinks Eligibility 
+# CoLinks Eligibility
 
 CoLinksEligibility is a [Hats Protocol](https://github.com/Hats-Protocol/hats-protocol) eligibility module that sets eligibility for a target hat based on the supply of a user's (aka "wearer's") [CoLinks](https://github.com/coordinape/coordinape-protocol/blob/main/contracts/colinks/CoLinks.sol) links.
 
